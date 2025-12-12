@@ -19,4 +19,5 @@ public interface ImageDisplay {
 
     public record Paint(byte[] bitmap, int offset) {}
 
+    public void resetZoom();
 }

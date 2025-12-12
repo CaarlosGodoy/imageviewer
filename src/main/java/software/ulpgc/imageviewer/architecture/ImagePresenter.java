@@ -24,6 +24,7 @@ public class ImagePresenter {
 
     public void show(Image image) {
         this.image = image;
+        this.display.resetZoom();
         this.display.paint(new Paint(image.bitmap(), 0));
     }
 

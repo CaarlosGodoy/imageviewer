@@ -6,9 +6,7 @@ import software.ulpgc.imageviewer.architecture.ImageDisplay;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
+import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -21,11 +19,14 @@ public class SwingImageDisplay extends JPanel implements ImageDisplay {
     private Shift shift;
     private Released released;
     private Paint[] paints;
+    private double zoomFactor = 1.0;
+    private final double zoomStep = 0.1;
+    private final Map<Integer, BufferedImage> images = new HashMap<>();
 
     public SwingImageDisplay() {
-        MouseAdapter mouseAdapter = new MouseAdapter();
-        this.addMouseListener(mouseAdapter);
-        this.addMouseMotionListener(mouseAdapter);
+        this.addMouseListener(new MouseAdapter());
+        this.addMouseMotionListener(new MouseAdapter());
+        this.addMouseWheelListener(new ZoomWheelListener());
     }
 
     @Override
@@ -39,7 +40,6 @@ public class SwingImageDisplay extends JPanel implements ImageDisplay {
         return this.getWidth();
     }
 
-    private final Map<Integer, BufferedImage> images = new HashMap<>();
     private BufferedImage toBufferedImage(byte[] bitmap) {
         return images.computeIfAbsent(Arrays.hashCode(bitmap), _ -> read(bitmap));
     }
@@ -54,54 +54,65 @@ public class SwingImageDisplay extends JPanel implements ImageDisplay {
 
     @Override
     public void paint(Graphics g) {
+        super.paint(g);
         g.setColor(Color.GRAY);
         g.fillRect(0,0,this.getWidth(), this.getHeight());
+
+        if (paints == null) return;
+
         for (Paint paint : paints) {
             BufferedImage bitmap = toBufferedImage(paint.bitmap());
+
             Canvas canvas = Canvas.ofSize(this.getWidth(), this.getHeight())
                     .fit(bitmap.getWidth(), bitmap.getHeight());
-            int x = (this.getWidth() - canvas.width()) / 2;
-            int y = (this.getHeight() - canvas.height()) / 2;
-            g.drawImage(bitmap, x+paint.offset(), y, canvas.width(), canvas.height(), null);
+
+            int scaledWidth = (int) (canvas.width() * zoomFactor);
+            int scaledHeight = (int) (canvas.height() * zoomFactor);
+
+            int x = (this.getWidth() - scaledWidth) / 2;
+            int y = (this.getHeight() - scaledHeight) / 2;
+
+            g.drawImage(bitmap, x + paint.offset(), y, scaledWidth, scaledHeight, null);
         }
+    }
+
+    public void resetZoom() {
+        this.zoomFactor = 1.0;
+        this.repaint();
     }
 
     private class MouseAdapter implements MouseListener, MouseMotionListener {
         private int x;
 
         @Override
-        public void mouseClicked(MouseEvent e) {
-
-        }
+        public void mouseClicked(MouseEvent e) {}
 
         @Override
-        public void mousePressed(MouseEvent e) {
-            x =  e.getX();
-        }
+        public void mousePressed(MouseEvent e) {x = e.getX();}
 
         @Override
-        public void mouseReleased(MouseEvent e) {
-            SwingImageDisplay.this.released.offset(e.getX() - x);
-        }
+        public void mouseReleased(MouseEvent e) {SwingImageDisplay.this.released.offset(e.getX() - x);}
 
         @Override
-        public void mouseEntered(MouseEvent e) {
-
-        }
+        public void mouseEntered(MouseEvent e) {}
 
         @Override
-        public void mouseExited(MouseEvent e) {
-
-        }
+        public void mouseExited(MouseEvent e) {}
 
         @Override
-        public void mouseDragged(MouseEvent e) {
-            SwingImageDisplay.this.shift.offset(e.getX() - x);
-        }
+        public void mouseDragged(MouseEvent e) {SwingImageDisplay.this.shift.offset(e.getX() - x);}
 
         @Override
-        public void mouseMoved(MouseEvent e) {
+        public void mouseMoved(MouseEvent e) {}
+    }
 
+    private class ZoomWheelListener implements MouseWheelListener {
+        @Override
+        public void mouseWheelMoved(MouseWheelEvent e) {
+            if (e.getWheelRotation() < 0) {
+                zoomFactor += (zoomFactor < 4.95) ? zoomStep : 0.0;
+            } else zoomFactor -= (zoomFactor > 0.15) ? zoomStep : 0.0;
+            SwingImageDisplay.this.repaint();
         }
     }
 
@@ -114,29 +125,4 @@ public class SwingImageDisplay extends JPanel implements ImageDisplay {
     public void on(Released released) {
         this.released = released;
     }
-
-
-
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

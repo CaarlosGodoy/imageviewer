@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Desktop extends JFrame {
+public class Desktop extends JFrame implements KeyListener {
     private final Map<String, Command> commands;
     private final JButton leftButton;
     private final JButton rightButton;
@@ -17,25 +17,34 @@ public class Desktop extends JFrame {
         this.commands = new HashMap<>();
         this.setTitle("Image Viewer");
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        this.setSize(800, 600);
-        this.setLayout(null);
-        this.setLocationRelativeTo(null);
+        this.addKeyListener(this);
+        this.setFocusable(true);
+
+        JPanel panel = new JPanel();
+        panel.setLayout(null);
+        int width = 800;
+        int height = 600;
+        panel.setPreferredSize(new Dimension(width, height));
 
         leftButton = btn("<", "prev");
-        leftButton.setBounds(20, 250, 60, 100);
-        this.getContentPane().add(leftButton);
+        leftButton.setBounds(20, (height - 100) / 2, 60, 100);
+        panel.add(leftButton);
 
         rightButton = btn(">", "next");
-        rightButton.setBounds(720, 250, 60, 100);
-        this.getContentPane().add(rightButton);
+        rightButton.setBounds(width - 80, (height - 100) / 2, 60, 100);
+        panel.add(rightButton);
 
-        imageDisplay.setBounds(0, 0, 800, 600);
-        this.getContentPane().add(imageDisplay);
+        imageDisplay.setBounds(0, 0, width, height);
+        panel.add(imageDisplay);
 
-        imageDisplay.addMouseListener(btnMouseListener());
+        panel.addMouseListener(mouseListener(panel));
+
+        this.add(panel);
+        this.pack();
+        this.setLocationRelativeTo(null);
     }
 
-    private MouseListener btnMouseListener() {
+    private MouseListener mouseListener(JPanel panel) {
         return (new MouseAdapter() {
             @Override
             public void mouseEntered(MouseEvent e) {
@@ -45,12 +54,13 @@ public class Desktop extends JFrame {
 
             @Override
             public void mouseExited(MouseEvent e) {
-                leftButton.setVisible(false);
-                rightButton.setVisible(false);
+                if (e.getX() < 0 || e.getX() >= panel.getWidth() || e.getY() < 0 || e.getY() >= panel.getHeight()) {
+                    leftButton.setVisible(false);
+                    rightButton.setVisible(false);
+                }
             }
         });
     }
-
 
     public static Desktop create(SwingImageDisplay imageDisplay) throws IOException {
         return new Desktop(imageDisplay);
@@ -71,18 +81,22 @@ public class Desktop extends JFrame {
         btn.setFont(new Font("Arial", Font.BOLD, 30));
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btn.setVisible(true);
+        btn.setFocusable(false);
         btn.addActionListener(e -> commands.get(name).execute());
-        btn.addMouseListener(btnMouseListener());
-        btn.addKeyListener(new KeyAdapter() {
-            @Override
-            public void keyPressed(KeyEvent e) {
-                if (e.getKeyCode() == KeyEvent.VK_LEFT) {
-                        commands.get("prev").execute();
-                } else if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
-                        commands.get("next").execute();
-                }
-            }
-        });
+
         return btn;
     }
+
+    @Override
+    public void keyTyped(KeyEvent e) {}
+    @Override
+    public void keyPressed(KeyEvent e) {
+        if (e.getKeyCode() == KeyEvent.VK_LEFT) {
+            commands.get("prev").execute();
+        } else if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
+            commands.get("next").execute();
+        }
+    }
+    @Override
+    public void keyReleased(KeyEvent e) {}
 }
