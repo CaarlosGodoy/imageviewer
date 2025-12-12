@@ -22,6 +22,7 @@ public class SwingImageDisplay extends JPanel implements ImageDisplay {
     private double zoomFactor = 1.0;
     private final double zoomStep = 0.1;
     private final Map<Integer, BufferedImage> images = new HashMap<>();
+    private boolean blackAndWhite = false;
 
     public SwingImageDisplay() {
         this.addMouseListener(new MouseAdapter());
@@ -52,6 +53,12 @@ public class SwingImageDisplay extends JPanel implements ImageDisplay {
         }
     }
 
+    public void setBlackAndWhite(boolean color) {
+        this.blackAndWhite = color;
+        images.clear();
+        this.repaint();
+    }
+
     @Override
     public void paint(Graphics g) {
         super.paint(g);
@@ -62,6 +69,10 @@ public class SwingImageDisplay extends JPanel implements ImageDisplay {
 
         for (Paint paint : paints) {
             BufferedImage bitmap = toBufferedImage(paint.bitmap());
+
+            if (blackAndWhite) {
+                bitmap = toBlackAndWhite(bitmap);
+            }
 
             Canvas canvas = Canvas.ofSize(this.getWidth(), this.getHeight())
                     .fit(bitmap.getWidth(), bitmap.getHeight());
@@ -74,6 +85,15 @@ public class SwingImageDisplay extends JPanel implements ImageDisplay {
 
             g.drawImage(bitmap, x + paint.offset(), y, scaledWidth, scaledHeight, null);
         }
+    }
+
+    private BufferedImage toBlackAndWhite(BufferedImage original) {
+        BufferedImage blackAndWhiteImage = new BufferedImage(
+                original.getWidth(), original.getHeight(), BufferedImage.TYPE_BYTE_GRAY);
+        Graphics g = blackAndWhiteImage.getGraphics();
+        g.drawImage(original, 0, 0, null);
+        g.dispose();
+        return blackAndWhiteImage;
     }
 
     public void resetZoom() {

@@ -20,6 +20,7 @@ public class Main {
         Desktop.create(imageDisplay)
                 .add("next", new NextCommand(imagePresenter))
                 .add("prev", new PrevCommand(imagePresenter))
+                .add("blackAndWhite", new BlackAndWhiteCommand(imageDisplay))
                 .setVisible(true);
     }
 

@@ -10,8 +10,9 @@ import java.util.Map;
 
 public class Desktop extends JFrame implements KeyListener {
     private final Map<String, Command> commands;
-    private final JButton leftButton;
-    private final JButton rightButton;
+    private final JButton leftBtn;
+    private final JButton rightBtn;
+    private final JButton blackAndWhiteBtn;
 
     private Desktop(SwingImageDisplay imageDisplay) throws HeadlessException {
         this.commands = new HashMap<>();
@@ -26,13 +27,17 @@ public class Desktop extends JFrame implements KeyListener {
         int height = 600;
         panel.setPreferredSize(new Dimension(width, height));
 
-        leftButton = btn("<", "prev");
-        leftButton.setBounds(20, (height - 100) / 2, 60, 100);
-        panel.add(leftButton);
+        blackAndWhiteBtn = btn("B/N", "blackAndWhite");
+        blackAndWhiteBtn.setBounds(350, 20, 100, 30);
+        panel.add(blackAndWhiteBtn);
 
-        rightButton = btn(">", "next");
-        rightButton.setBounds(width - 80, (height - 100) / 2, 60, 100);
-        panel.add(rightButton);
+        leftBtn = btn("<", "prev");
+        leftBtn.setBounds(20, (height - 100) / 2, 60, 100);
+        panel.add(leftBtn);
+
+        rightBtn = btn(">", "next");
+        rightBtn.setBounds(width - 80, (height - 100) / 2, 60, 100);
+        panel.add(rightBtn);
 
         imageDisplay.setBounds(0, 0, width, height);
         panel.add(imageDisplay);
@@ -48,15 +53,15 @@ public class Desktop extends JFrame implements KeyListener {
         return (new MouseAdapter() {
             @Override
             public void mouseEntered(MouseEvent e) {
-                leftButton.setVisible(true);
-                rightButton.setVisible(true);
+                leftBtn.setVisible(true);
+                rightBtn.setVisible(true);
             }
 
             @Override
             public void mouseExited(MouseEvent e) {
                 if (e.getX() < 0 || e.getX() >= panel.getWidth() || e.getY() < 0 || e.getY() >= panel.getHeight()) {
-                    leftButton.setVisible(false);
-                    rightButton.setVisible(false);
+                    leftBtn.setVisible(false);
+                    rightBtn.setVisible(false);
                 }
             }
         });
